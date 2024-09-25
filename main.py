@@ -1,16 +1,25 @@
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 
+import requests
+
 # Set up argument parser
-parser = argparse.ArgumentParser(description="Generate invoice from work log data.")
+parser = argparse.ArgumentParser(
+    description="Generate invoice from timewarrior export."
+)
 parser.add_argument("--client_id", required=True, help="ID of the client")
 parser.add_argument(
     "--contact_id", required=True, help="ID of the contact at the client"
 )
 parser.add_argument(
     "--price_per_hour", type=float, required=True, help="Hourly rate in dollars"
+)
+parser.add_argument(
+    "--invoice_id",
+    help="ID of the invoice to replace, if none is provided a new invoice will be created",
 )
 
 # Parse arguments
@@ -20,6 +29,7 @@ args = parser.parse_args()
 client_id = args.client_id
 contact_id = args.contact_id
 price_per_hour = args.price_per_hour
+invoice_id = args.invoice_id
 
 # Read data from stdin
 data = sys.stdin.read()
@@ -102,5 +112,32 @@ for date, tags in work_log.items():
         }
         output["items"].append(item)
 
-# Output the final JSON
-print(json.dumps(output, indent=4))
+# Retrieve base URL and API token from environment variables
+base_url = os.getenv("SOLIDINVOICE_BASE_URL")
+api_token = os.getenv("SOLIDINVOICE_API_TOKEN")
+
+# Check if either the base URL or API token is not set
+if not base_url or not api_token:
+    print(json.dumps(output, indent=4))
+else:
+    # Determine if we are creating a new invoice or updating an existing one
+    if "invoice_id" in locals() and invoice_id is not None:
+        url = f"{base_url}/api/invoices/{invoice_id}"
+        method = "PUT"
+    else:
+        url = f"{base_url}/api/invoices"
+        method = "POST"
+
+    # Set up headers
+    headers = {
+        "accept": "application/ld+json",
+        "Content-Type": "application/ld+json",
+        "X-API-TOKEN": api_token,
+    }
+
+    # Make the HTTP request
+    response = requests.request(method, url, headers=headers, data=json.dumps(output))
+
+    # Print the response from the server
+    print(response.status_code)
+    print(response.json())
