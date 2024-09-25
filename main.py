@@ -12,9 +12,6 @@ parser.add_argument(
 parser.add_argument(
     "--price_per_hour", type=float, required=True, help="Hourly rate in dollars"
 )
-parser.add_argument(
-    "--due_days", type=int, required=True, help="Number of days until the due date"
-)
 
 # Parse arguments
 args = parser.parse_args()
@@ -23,7 +20,6 @@ args = parser.parse_args()
 client_id = args.client_id
 contact_id = args.contact_id
 price_per_hour = args.price_per_hour
-due_days = args.due_days
 
 # Read data from stdin
 data = sys.stdin.read()
