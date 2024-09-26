@@ -4,6 +4,7 @@ import os
 import sys
 from datetime import datetime
 
+import pytz
 import requests
 
 # Set up argument parser
@@ -58,7 +59,22 @@ work_log = {}
 for entry in entries:
     start = entry["start"]
     end = entry.get("end", None)  # Handle cases where 'end' might not exist
-    date = start[:8]  # Extract the date part (YYYYMMDD) from 'start'
+
+    # Parse the datetime strings
+    start_dt = datetime.strptime(start, "%Y%m%dT%H%M%SZ")
+    end_dt = datetime.strptime(end, "%Y%m%dT%H%M%SZ") if end else None
+
+    # Convert to UTC timezone
+    start_dt = start_dt.replace(tzinfo=pytz.utc)
+    end_dt = end_dt.replace(tzinfo=pytz.utc) if end_dt else None
+
+    # Convert to local timezone
+    local_tz = datetime.now().astimezone().tzinfo
+    start_local = start_dt.astimezone(local_tz)
+    end_local = end_dt.astimezone(local_tz) if end_dt else None
+
+    # Format the date as YYYYMMDD
+    date = start_local.strftime("%Y%m%d")
 
     # Calculate hours if both start and end are present
     if end:

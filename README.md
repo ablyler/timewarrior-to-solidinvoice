@@ -5,7 +5,7 @@ This script generates invoices based on time tracking data exported from Timewar
 # Installation
 
 1. Clone or download this repository.
-2. Install the required dependencies (e.g., via pip): `pip install requests`
+2. Install the required dependencies (e.g., via pip): `pip install requests pytz`
 
 # Usage
 
